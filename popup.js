@@ -94,7 +94,10 @@ function displayStoredTimestamps() {
     if (timestamps.length === 0) {
       timestampList.innerHTML = "<p>No saved timestamps yet.</p>";
     } else {
-      const timestampItems = timestamps
+      // Sort timestamps in reverse chronological order (newest first)
+      const sortedTimestamps = timestamps.slice().sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+
+      const timestampItems = sortedTimestamps
         .map((ts) => {
           // Create URL with timestamp parameter
           const timeInSeconds = Math.floor(ts.currentTime);
