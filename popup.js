@@ -95,16 +95,21 @@ function displayStoredTimestamps() {
       timestampList.innerHTML = "<p>No saved timestamps yet.</p>";
     } else {
       const timestampItems = timestamps
-        .map(
-          (ts) => `
+        .map((ts) => {
+          // Create URL with timestamp parameter
+          const timeInSeconds = Math.floor(ts.currentTime);
+          const separator = ts.url.includes("?") ? "&" : "?";
+          const timestampUrl = `${ts.url}${separator}t=${timeInSeconds}`;
+
+          return `
         <div class="timestamp-item">
           <div class="timestamp-time">${ts.formattedTime} / ${ts.formattedDuration}</div>
           <div class="timestamp-title">${ts.title}</div>
-          <div class="timestamp-url"><a href="${ts.url}" target="_blank">${ts.url}</a></div>
+          <div class="timestamp-url"><a href="${timestampUrl}" target="_blank">${ts.url}</a></div>
           <div class="timestamp-saved">Saved: ${new Date(ts.savedAt).toLocaleString()}</div>
         </div>
-      `,
-        )
+      `;
+        })
         .join("");
 
       timestampList.innerHTML = timestampItems;
