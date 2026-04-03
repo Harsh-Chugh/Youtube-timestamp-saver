@@ -128,7 +128,7 @@ function displayStoredTimestamps() {
       const timestampItems = sortedTimestamps
         .map((ts) => {
           // Create URL with timestamp parameter
-          const timeInSeconds = ts.timeInSeconds || Math.floor(ts.currentTime); // Use pre-calculated if available, fallback to calculation
+          const timeInSeconds = Math.floor(ts.currentTime);
           const separator = ts.url.includes("?") ? "&" : "?";
           const timestampUrl = `${ts.url}${separator}t=${timeInSeconds}`;
 
@@ -176,7 +176,7 @@ function refreshTimestampList() {
       const timestampItems = sortedTimestamps
         .map((ts) => {
           // Create URL with timestamp parameter
-          const timeInSeconds = ts.timeInSeconds || Math.floor(ts.currentTime); // Use pre-calculated if available, fallback to calculation
+          const timeInSeconds = Math.floor(ts.currentTime);
           const separator = ts.url.includes("?") ? "&" : "?";
           const timestampUrl = `${ts.url}${separator}t=${timeInSeconds}`;
 
