@@ -86,6 +86,32 @@ viewButton.addEventListener("click", () => {
   displayStoredTimestamps();
 });
 
+// Handle delete button clicks
+function handleDeleteClick(event) {
+  const timestampId = parseInt(event.target.dataset.id);
+  deleteTimestamp(timestampId);
+}
+
+// Delete a timestamp from storage
+function deleteTimestamp(timestampId) {
+  chrome.storage.local.get(["savedTimestamps"], (result) => {
+    const timestamps = result.savedTimestamps || [];
+    const updatedTimestamps = timestamps.filter((ts) => ts.id !== timestampId);
+
+    chrome.storage.local.set({ savedTimestamps: updatedTimestamps }, () => {
+      if (chrome.runtime.lastError) {
+        console.error("Error deleting timestamp:", chrome.runtime.lastError);
+        displayMessage("Failed to delete timestamp", "error");
+      } else {
+        console.log("Timestamp deleted successfully");
+        displayMessage("Timestamp deleted", "success");
+        // Refresh the display without toggling visibility
+        refreshTimestampList();
+      }
+    });
+  });
+}
+
 // Helper function to display stored timestamps
 function displayStoredTimestamps() {
   chrome.storage.local.get(["savedTimestamps"], (result) => {
@@ -95,7 +121,9 @@ function displayStoredTimestamps() {
       timestampList.innerHTML = "<p>No saved timestamps yet.</p>";
     } else {
       // Sort timestamps in reverse chronological order (newest first)
-      const sortedTimestamps = timestamps.slice().sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+      const sortedTimestamps = timestamps
+        .slice()
+        .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
 
       const timestampItems = sortedTimestamps
         .map((ts) => {
@@ -106,6 +134,7 @@ function displayStoredTimestamps() {
 
           return `
         <div class="timestamp-item">
+          <button class="delete-btn" data-id="${ts.id}" title="Delete timestamp">×</button>
           <div class="timestamp-time">${ts.formattedTime} / ${ts.formattedDuration}</div>
           <div class="timestamp-title">${ts.title}</div>
           <div class="timestamp-url"><a href="${timestampUrl}" target="_blank">${ts.url}</a></div>
@@ -116,12 +145,63 @@ function displayStoredTimestamps() {
         .join("");
 
       timestampList.innerHTML = timestampItems;
+
+      // Add event listeners for delete buttons
+      const deleteButtons = timestampList.querySelectorAll(".delete-btn");
+      deleteButtons.forEach((button) => {
+        button.addEventListener("click", handleDeleteClick);
+      });
     }
 
     // Toggle visibility
     timestampList.style.display =
       timestampList.style.display === "none" ? "block" : "none";
     timestampDisplay.textContent = ""; // Clear any current message
+  });
+}
+
+// Helper function to refresh timestamp list without toggling visibility
+function refreshTimestampList() {
+  chrome.storage.local.get(["savedTimestamps"], (result) => {
+    const timestamps = result.savedTimestamps || [];
+
+    if (timestamps.length === 0) {
+      timestampList.innerHTML = "<p>No saved timestamps yet.</p>";
+    } else {
+      // Sort timestamps in reverse chronological order (newest first)
+      const sortedTimestamps = timestamps
+        .slice()
+        .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+
+      const timestampItems = sortedTimestamps
+        .map((ts) => {
+          // Create URL with timestamp parameter
+          const timeInSeconds = Math.floor(ts.currentTime);
+          const separator = ts.url.includes("?") ? "&" : "?";
+          const timestampUrl = `${ts.url}${separator}t=${timeInSeconds}`;
+
+          return `
+        <div class="timestamp-item">
+          <button class="delete-btn" data-id="${ts.id}" title="Delete timestamp">×</button>
+          <div class="timestamp-time">${ts.formattedTime} / ${ts.formattedDuration}</div>
+          <div class="timestamp-title">${ts.title}</div>
+          <div class="timestamp-url"><a href="${timestampUrl}" target="_blank">${ts.url}</a></div>
+          <div class="timestamp-saved">Saved: ${new Date(ts.savedAt).toLocaleString()}</div>
+        </div>
+      `;
+        })
+        .join("");
+
+      timestampList.innerHTML = timestampItems;
+
+      // Add event listeners for delete buttons
+      const deleteButtons = timestampList.querySelectorAll(".delete-btn");
+      deleteButtons.forEach((button) => {
+        button.addEventListener("click", handleDeleteClick);
+      });
+    }
+
+    // Note: No visibility toggle here - just refresh content
   });
 }
 
