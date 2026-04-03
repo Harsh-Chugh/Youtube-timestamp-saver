@@ -28,6 +28,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       const timestamp = {
         currentTime: currentTime,
+        timeInSeconds: Math.floor(currentTime), // Add integer seconds for URL
         formattedTime: formatTime(currentTime),
         duration: duration,
         formattedDuration: formatTime(duration),
