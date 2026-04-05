@@ -86,6 +86,24 @@ viewButton.addEventListener("click", () => {
   displayStoredTimestamps();
 });
 
+// Helper function to remove existing timestamp parameter from URL
+function removeExistingTimestampParam(url) {
+  // Split at ? to get base URL and query string
+  const [baseUrl, queryString] = url.split("?");
+
+  if (!queryString) {
+    return url; // No query string, return as is
+  }
+
+  // Split query string by & and filter out t parameter
+  const params = queryString
+    .split("&")
+    .filter((param) => !param.startsWith("t="));
+
+  // Reconstruct URL
+  return params.length > 0 ? baseUrl + "?" + params.join("&") : baseUrl;
+}
+
 // Handle delete button clicks
 function handleDeleteClick(event) {
   const timestampId = parseInt(event.target.dataset.id);
@@ -129,8 +147,9 @@ function displayStoredTimestamps() {
         .map((ts) => {
           // Create URL with timestamp parameter
           const timeInSeconds = Math.floor(ts.currentTime);
-          const separator = ts.url.includes("?") ? "&" : "?";
-          const timestampUrl = `${ts.url}${separator}t=${timeInSeconds}`;
+          const cleanUrl = removeExistingTimestampParam(ts.url);
+          const separator = cleanUrl.includes("?") ? "&" : "?";
+          const timestampUrl = `${cleanUrl}${separator}t=${timeInSeconds}`;
 
           return `
         <div class="timestamp-item">
@@ -177,8 +196,9 @@ function refreshTimestampList() {
         .map((ts) => {
           // Create URL with timestamp parameter
           const timeInSeconds = Math.floor(ts.currentTime);
-          const separator = ts.url.includes("?") ? "&" : "?";
-          const timestampUrl = `${ts.url}${separator}t=${timeInSeconds}`;
+          const cleanUrl = removeExistingTimestampParam(ts.url);
+          const separator = cleanUrl.includes("?") ? "&" : "?";
+          const timestampUrl = `${cleanUrl}${separator}t=${timeInSeconds}`;
 
           return `
         <div class="timestamp-item">
