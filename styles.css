@@ -122,6 +122,8 @@ h1 {
   max-height: 400px;
   overflow-y: auto;
   margin-top: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .timestamp-item {
@@ -189,6 +191,7 @@ h1 {
 .timestamp-url a {
   color: #0066cc;
   text-decoration: none;
+   word-wrap: break-word;
 }
 
 .timestamp-url a:hover {
