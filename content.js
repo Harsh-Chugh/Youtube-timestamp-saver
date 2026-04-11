@@ -1,3 +1,17 @@
+// Function to extract YouTube Video ID
+function getVideoId(url) {
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.hostname === "youtu.be") {
+      return urlObj.pathname.slice(1);
+    }
+    const params = new URLSearchParams(urlObj.search);
+    return params.get("v");
+  } catch (e) {
+    return null;
+  }
+}
+
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getTimestamp") {
@@ -26,7 +40,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return `${mins}:${secs.toString().padStart(2, "0")}`;
       };
 
+      const videoId = getVideoId(window.location.href);
+
       const timestamp = {
+        videoId: videoId,
         currentTime: currentTime,
         formattedTime: formatTime(currentTime),
         duration: duration,
