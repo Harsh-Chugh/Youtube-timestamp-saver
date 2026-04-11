@@ -33,13 +33,6 @@ saveButton.addEventListener("click", async () => {
 
       if (response && response.success) {
         const ts = response.timestamp;
-        const message = `Saved: ${ts.formattedTime} / ${ts.formattedDuration}`;
-        displayMessage(message, "success");
-
-        console.log("Timestamp captured:", ts);
-        console.log(`   URL: ${ts.url}`);
-        console.log(`   Title: ${ts.title}`);
-        console.log(`   Current Time: ${ts.formattedTime}`);
 
         // Store timestamp in local storage
         const timestampEntry = {
@@ -47,25 +40,49 @@ saveButton.addEventListener("click", async () => {
           savedAt: new Date().toISOString(),
           id: Date.now(), // unique ID for each entry
         };
+
         if (!chrome?.storage?.local) {
           console.error("chrome.storage.local unavailable");
           displayMessage("Storage unavailable", "error");
           return;
         }
+
         chrome.storage.local.get(["savedTimestamps"], (result) => {
           const timestamps = result.savedTimestamps || [];
-          timestamps.push(timestampEntry);
 
-          chrome.storage.local.set({ savedTimestamps: timestamps }, () => {
-            if (chrome.runtime.lastError) {
-              console.error(
-                "Error saving timestamp:",
-                chrome.runtime.lastError,
-              );
-            } else {
-              console.log("Timestamp saved to local storage");
-            }
-          });
+          // Check if video already exists
+          const isUpdate = timestamps.some((t) => t.videoId === ts.videoId);
+
+          // Filter out any existing entry for this video ID
+          const updatedTimestamps = timestamps.filter(
+            (t) => t.videoId !== ts.videoId,
+          );
+
+          // Add the new/updated entry
+          updatedTimestamps.push(timestampEntry);
+
+          chrome.storage.local.set(
+            { savedTimestamps: updatedTimestamps },
+            () => {
+              if (chrome.runtime.lastError) {
+                console.error(
+                  "Error saving timestamp:",
+                  chrome.runtime.lastError,
+                );
+                displayMessage("Failed to save timestamp", "error");
+              } else {
+                const successMsg = isUpdate
+                  ? "Timestamp Updated!"
+                  : "Timestamp Saved!";
+                displayMessage(successMsg, "success");
+                console.log(
+                  isUpdate
+                    ? "Timestamp updated"
+                    : "Timestamp saved to local storage",
+                );
+              }
+            },
+          );
         });
       } else {
         displayMessage(
