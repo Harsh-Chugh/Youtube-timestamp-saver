@@ -100,7 +100,7 @@ saveButton.addEventListener("click", async () => {
 
 // Add view button handler
 viewButton.addEventListener("click", () => {
-  displayStoredTimestamps();
+  renderTimestamps(true);
 });
 
 // Helper function to remove existing timestamp parameter from URL
@@ -141,14 +141,17 @@ function deleteTimestamp(timestampId) {
         console.log("Timestamp deleted successfully");
         displayMessage("Timestamp deleted", "success");
         // Refresh the display without toggling visibility
-        refreshTimestampList();
+        renderTimestamps(false);
       }
     });
   });
 }
 
-// Helper function to display stored timestamps
-function displayStoredTimestamps() {
+/**
+ * Renders the stored timestamps in the UI.
+ * @param {boolean} toggleVisibility - If true, toggles the display of the list.
+ */
+function renderTimestamps(toggleVisibility = false) {
   chrome.storage.local.get(["savedTimestamps"], (result) => {
     const timestamps = result.savedTimestamps || [];
 
@@ -189,58 +192,14 @@ function displayStoredTimestamps() {
       });
     }
 
-    // Toggle visibility
-    timestampList.style.display =
-      timestampList.style.display === "none" ? "block" : "none";
-    timestampDisplay.textContent = ""; // Clear any current message
-  });
-}
-
-// Helper function to refresh timestamp list without toggling visibility
-function refreshTimestampList() {
-  chrome.storage.local.get(["savedTimestamps"], (result) => {
-    const timestamps = result.savedTimestamps || [];
-
-    if (timestamps.length === 0) {
-      timestampList.innerHTML = "<p>No saved timestamps yet.</p>";
-    } else {
-      // Sort timestamps in reverse chronological order (newest first)
-      const sortedTimestamps = timestamps
-        .slice()
-        .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
-
-      const timestampItems = sortedTimestamps
-        .map((ts) => {
-          // Create URL with timestamp parameter
-          const timeInSeconds = Math.floor(ts.currentTime);
-          const cleanUrl = removeExistingTimestampParam(ts.url);
-          const separator = cleanUrl.includes("?") ? "&" : "?";
-          const timestampUrl = `${cleanUrl}${separator}t=${timeInSeconds}`;
-
-          return `
-        <div class="timestamp-item">
-          <button class="delete-btn" data-id="${ts.id}" title="Delete timestamp">×</button>
-          <div class="timestamp-time">${ts.formattedTime} / ${ts.formattedDuration}</div>
-          <div class="timestamp-title">${ts.title}</div>
-          <div class="timestamp-url"><a href="${timestampUrl}" target="_blank">${ts.url}</a></div>
-          <div class="timestamp-saved">Saved: ${new Date(ts.savedAt).toLocaleString()}</div>
-        </div>
-      `;
-        })
-        .join("");
-
-      timestampList.innerHTML = timestampItems;
-
-      // Add event listeners for delete buttons
-      const deleteButtons = timestampList.querySelectorAll(".delete-btn");
-      deleteButtons.forEach((button) => {
-        button.addEventListener("click", handleDeleteClick);
-      });
+    if (toggleVisibility) {
+      timestampList.style.display =
+        timestampList.style.display === "none" ? "block" : "none";
+      timestampDisplay.textContent = ""; // Clear any current message
     }
-
-    // Note: No visibility toggle here - just refresh content
   });
 }
+
 
 // Helper function to display messages
 function displayMessage(message, type) {
