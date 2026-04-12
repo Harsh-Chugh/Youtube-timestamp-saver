@@ -9,7 +9,10 @@ chrome.commands.onCommand.addListener((command) => {
 async function handleSaveTimestamp() {
   try {
     // Get the active tab
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
 
     // Verify it's a YouTube tab
     if (!tab || !tab.url || !tab.url.includes("youtube.com")) {
@@ -20,7 +23,10 @@ async function handleSaveTimestamp() {
     // Request timestamp from content script
     chrome.tabs.sendMessage(tab.id, { action: "getTimestamp" }, (response) => {
       if (chrome.runtime.lastError) {
-        console.error("Error communicating with content script:", chrome.runtime.lastError);
+        console.error(
+          "Error communicating with content script. Please refresh the YouTube page.",
+          chrome.runtime.lastError
+        );
         return;
       }
 
@@ -45,12 +51,14 @@ function saveToStorage(ts, tabId) {
 
   chrome.storage.local.get(["savedTimestamps"], (result) => {
     const timestamps = result.savedTimestamps || [];
-    
+
     // Check if it's an update (same videoId)
     const isUpdate = timestamps.some((t) => t.videoId === ts.videoId);
-    
+
     // Filter and push logic for duplicate prevention
-    const updatedTimestamps = timestamps.filter((t) => t.videoId !== ts.videoId);
+    const updatedTimestamps = timestamps.filter(
+      (t) => t.videoId !== ts.videoId,
+    );
     updatedTimestamps.push(timestampEntry);
 
     chrome.storage.local.set({ savedTimestamps: updatedTimestamps }, () => {
@@ -59,12 +67,12 @@ function saveToStorage(ts, tabId) {
       } else {
         const message = isUpdate ? "Timestamp Updated!" : "Timestamp Saved!";
         console.log(message);
-        
+
         // Notify content script to show visual feedback (Toast)
-        chrome.tabs.sendMessage(tabId, { 
-          action: "showToast", 
+        chrome.tabs.sendMessage(tabId, {
+          action: "showToast",
           text: `${message} (${ts.formattedTime})`,
-          type: "success"
+          type: "success",
         });
       }
     });
