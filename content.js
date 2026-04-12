@@ -12,7 +12,7 @@ function getVideoId(url) {
   }
 }
 
-// Listen for messages from the popup
+// Listen for messages from the popup or background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getTimestamp") {
     try {
@@ -65,5 +65,40 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         error: error.message,
       });
     }
+  } else if (request.action === "showToast") {
+    showToast(request.text, request.type);
+    sendResponse({ success: true });
   }
 });
+
+// Function to show a toast notification on the page
+function showToast(message, type = "success") {
+  // Remove existing toast if any
+  const existingToast = document.getElementById("yt-timestamp-saver-toast");
+  if (existingToast) {
+    existingToast.remove();
+  }
+
+  // Create toast element
+  const toast = document.createElement("div");
+  toast.id = "yt-timestamp-saver-toast";
+  toast.className = `yt-timestamp-saver-toast ${type}`;
+  toast.textContent = message;
+
+  document.body.appendChild(toast);
+
+  // Trigger animation
+  setTimeout(() => {
+    toast.classList.add("show");
+  }, 10);
+
+  // Remove toast after 3 seconds
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 300);
+  }, 3000);
+}
