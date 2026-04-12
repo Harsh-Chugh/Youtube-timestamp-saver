@@ -7,89 +7,23 @@ const timestampList = document.getElementById("timestampList");
 // Add click handler
 saveButton.addEventListener("click", async () => {
   try {
-    // Get the active tab
-    const [tab] = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-
-    // Check if we're on YouTube
-    if (!tab.url.includes("youtube.com")) {
-      displayMessage("Please navigate to a YouTube video first.", "error");
-      console.log("Not on YouTube. Current URL:", tab.url);
-      return;
-    }
-
-    // Send message to content script
-    chrome.tabs.sendMessage(tab.id, { action: "getTimestamp" }, (response) => {
+    // Send message to background script to trigger the save process
+    chrome.runtime.sendMessage({ action: "saveTimestampFromPopup" }, (response) => {
       if (chrome.runtime.lastError) {
-        displayMessage(
-          "Could not access YouTube page. Try refreshing.",
-          "error",
-        );
+        displayMessage("Could not communicate with background script.", "error");
         console.error("Error:", chrome.runtime.lastError);
         return;
       }
-
-      if (response && response.success) {
-        const ts = response.timestamp;
-
-        // Store timestamp in local storage
-        const timestampEntry = {
-          ...ts,
-          savedAt: new Date().toISOString(),
-          id: Date.now(), // unique ID for each entry
-        };
-
-        if (!chrome?.storage?.local) {
-          console.error("chrome.storage.local unavailable");
-          displayMessage("Storage unavailable", "error");
-          return;
-        }
-
-        chrome.storage.local.get(["savedTimestamps"], (result) => {
-          const timestamps = result.savedTimestamps || [];
-
-          // Check if video already exists
-          const isUpdate = timestamps.some((t) => t.videoId === ts.videoId);
-
-          // Filter out any existing entry for this video ID
-          const updatedTimestamps = timestamps.filter(
-            (t) => t.videoId !== ts.videoId,
-          );
-
-          // Add the new/updated entry
-          updatedTimestamps.push(timestampEntry);
-
-          chrome.storage.local.set(
-            { savedTimestamps: updatedTimestamps },
-            () => {
-              if (chrome.runtime.lastError) {
-                console.error(
-                  "Error saving timestamp:",
-                  chrome.runtime.lastError,
-                );
-                displayMessage("Failed to save timestamp", "error");
-              } else {
-                const successMsg = isUpdate
-                  ? "Timestamp Updated!"
-                  : "Timestamp Saved!";
-                displayMessage(successMsg, "success");
-                console.log(
-                  isUpdate
-                    ? "Timestamp updated"
-                    : "Timestamp saved to local storage",
-                );
-              }
-            },
-          );
-        });
-      } else {
-        displayMessage(
-          `${response?.error || "Failed to capture timestamp"}`,
-          "error",
-        );
-        console.error("Response error:", response?.error);
+      
+      // The background script handles the save and notification. 
+      // We can close the popup or show a brief message here.
+      if (response && response.status === "processing") {
+        // We give it a moment to save before refreshing the list if it's visible
+        setTimeout(() => {
+          if (timestampList.style.display !== "none") {
+            renderTimestamps(false);
+          }
+        }, 500);
       }
     });
   } catch (error) {
