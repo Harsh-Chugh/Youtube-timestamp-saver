@@ -14,21 +14,20 @@ saveButton.addEventListener("click", async () => {
         console.error("Error:", chrome.runtime.lastError);
         return;
       }
-      
-      // The background script handles the save and notification. 
-      // We can close the popup or show a brief message here.
-      if (response && response.status === "processing") {
-        // We give it a moment to save before refreshing the list if it's visible
-        setTimeout(() => {
-          if (timestampList.style.display !== "none") {
-            renderTimestamps(false);
-          }
-        }, 500);
-      }
     });
   } catch (error) {
     displayMessage("Error: " + error.message, "error");
     console.error("Exception:", error);
+  }
+});
+
+// Listen for messages from the background script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "timestampSaved") {
+    // Refresh the list if it's currently visible
+    if (timestampList.style.display !== "none") {
+      renderTimestamps(false);
+    }
   }
 });
 

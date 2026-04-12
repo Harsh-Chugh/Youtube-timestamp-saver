@@ -74,6 +74,11 @@ function saveToStorage(ts, tabId) {
           text: `${message} (${ts.formattedTime})`,
           type: "success",
         });
+
+        // Notify popup to refresh its list if it's open
+        chrome.runtime.sendMessage({ action: "timestampSaved" }).catch(() => {
+          // Ignore error if popup is not open
+        });
       }
     });
   });
