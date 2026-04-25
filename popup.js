@@ -8,13 +8,19 @@ const timestampList = document.getElementById("timestampList");
 saveButton.addEventListener("click", async () => {
   try {
     // Send message to background script to trigger the save process
-    chrome.runtime.sendMessage({ action: "saveTimestampFromPopup" }, (response) => {
-      if (chrome.runtime.lastError) {
-        displayMessage("Could not communicate with background script.", "error");
-        console.error("Error:", chrome.runtime.lastError);
-        return;
-      }
-    });
+    chrome.runtime.sendMessage(
+      { action: "saveTimestampFromPopup" },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          displayMessage(
+            "Could not communicate with background script.",
+            "error",
+          );
+          console.error("Error:", chrome.runtime.lastError);
+          return;
+        }
+      },
+    );
   } catch (error) {
     displayMessage("Error: " + error.message, "error");
     console.error("Exception:", error);
@@ -109,7 +115,7 @@ function renderTimestamps(toggleVisibility = false) {
           <button class="delete-btn" data-id="${ts.id}" title="Delete timestamp">×</button>
           <div class="timestamp-time">${ts.formattedTime} / ${ts.formattedDuration}</div>
           <div class="timestamp-title">${ts.title}</div>
-          <div class="timestamp-url"><a href="${timestampUrl}" target="_blank">${ts.url}</a></div>
+          <div class="timestamp-url"><a href="${timestampUrl}" class="timestamp-link">${ts.url}</a></div>
           <div class="timestamp-saved">Saved: ${new Date(ts.savedAt).toLocaleString()}</div>
         </div>
       `;
@@ -123,6 +129,16 @@ function renderTimestamps(toggleVisibility = false) {
       deleteButtons.forEach((button) => {
         button.addEventListener("click", handleDeleteClick);
       });
+
+      // Add event listeners for timestamp links
+      const timestampLinks = timestampList.querySelectorAll(".timestamp-link");
+      timestampLinks.forEach((link) => {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          const url = event.currentTarget.href;
+          chrome.tabs.create({ url: url });
+        });
+      });
     }
 
     if (toggleVisibility) {
@@ -132,7 +148,6 @@ function renderTimestamps(toggleVisibility = false) {
     }
   });
 }
-
 
 // Helper function to display messages
 function displayMessage(message, type) {
