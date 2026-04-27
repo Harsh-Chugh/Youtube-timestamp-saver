@@ -43,23 +43,38 @@ async function handleSaveTimestamp() {
 
 // Function to save timestamp to local storage
 function saveToStorage(ts, tabId) {
-  const timestampEntry = {
-    ...ts,
-    savedAt: new Date().toISOString(),
-    id: Date.now(),
-  };
-
   chrome.storage.local.get(["savedTimestamps"], (result) => {
     const timestamps = result.savedTimestamps || [];
 
     // Check if it's an update (same videoId)
-    const isUpdate = timestamps.some((t) => t.videoId === ts.videoId);
+    const existingIndex = timestamps.findIndex((t) => t.videoId === ts.videoId);
+    const isUpdate = existingIndex !== -1;
 
-    // Filter and push logic for duplicate prevention
-    const updatedTimestamps = timestamps.filter(
-      (t) => t.videoId !== ts.videoId,
-    );
-    updatedTimestamps.push(timestampEntry);
+    let timestampEntry;
+
+    if (isUpdate) {
+      // Preserve original title and ID, update everything else
+      const existingEntry = timestamps[existingIndex];
+      timestampEntry = {
+        ...ts,
+        title: existingEntry.title, // Keep the first saved title
+        id: existingEntry.id, // Keep original ID
+        savedAt: new Date().toISOString(), // Update time for sorting
+      };
+
+      // Remove the old entry so we can push the updated one to the end
+      // (This maintains the current behavior of moving updates to the top)
+      timestamps.splice(existingIndex, 1);
+    } else {
+      // New entry
+      timestampEntry = {
+        ...ts,
+        savedAt: new Date().toISOString(),
+        id: Date.now(),
+      };
+    }
+
+    const updatedTimestamps = [...timestamps, timestampEntry];
 
     chrome.storage.local.set({ savedTimestamps: updatedTimestamps }, () => {
       if (chrome.runtime.lastError) {
