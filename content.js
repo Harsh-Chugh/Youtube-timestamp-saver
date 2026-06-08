@@ -48,9 +48,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       };
 
       const videoId = getVideoId(window.location.href);
+      const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : null;
 
       const timestamp = {
         videoId: videoId,
+        thumbnailUrl: thumbnailUrl,
         currentTime: currentTime,
         formattedTime: formatTime(currentTime),
         duration: duration,

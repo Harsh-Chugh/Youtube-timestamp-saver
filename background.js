@@ -53,11 +53,12 @@ function saveToStorage(ts, tabId) {
     let timestampEntry;
 
     if (isUpdate) {
-      // Preserve original title and ID, update everything else
+      // Preserve original title, ID, and thumbnailUrl if it exists, update everything else
       const existingEntry = timestamps[existingIndex];
       timestampEntry = {
         ...ts,
         title: existingEntry.title, // Keep the first saved title
+        thumbnailUrl: existingEntry.thumbnailUrl || ts.thumbnailUrl, // Keep existing or use new
         id: existingEntry.id, // Keep original ID
         savedAt: new Date().toISOString(), // Update time for sorting
       };

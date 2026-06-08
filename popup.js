@@ -116,12 +116,18 @@ function renderTimestamps() {
           const separator = cleanUrl.includes("?") ? "&" : "?";
           const timestampUrl = `${cleanUrl}${separator}t=${timeInSeconds}`;
 
+          // Fallback for thumbnailUrl if it doesn't exist (for older saved timestamps)
+          const thumbUrl = ts.thumbnailUrl || (ts.videoId ? `https://img.youtube.com/vi/${ts.videoId}/mqdefault.jpg` : null);
+
           return `
         <div class="timestamp-item" data-url="${timestampUrl}">
           <button class="delete-btn" data-id="${ts.id}" title="Delete timestamp">×</button>
-          <div class="timestamp-title">${ts.title}</div>
-          <div class="timestamp-time">${ts.formattedTime} / ${ts.formattedDuration}</div>
-          <div class="timestamp-saved">Saved: ${formatDate(ts.savedAt)}</div>
+          ${thumbUrl ? `<img src="${thumbUrl}" class="timestamp-thumbnail" alt="Video thumbnail">` : ""}
+          <div class="timestamp-info">
+            <div class="timestamp-title">${ts.title}</div>
+            <div class="timestamp-time">${ts.formattedTime} / ${ts.formattedDuration}</div>
+            <div class="timestamp-saved">Saved: ${formatDate(ts.savedAt)}</div>
+          </div>
         </div>
       `;
         })
