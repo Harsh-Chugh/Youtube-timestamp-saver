@@ -1,8 +1,10 @@
 // Get the save button
 const saveButton = document.getElementById("saveBtn");
-const viewButton = document.getElementById("viewBtn");
 const timestampDisplay = document.getElementById("timestampDisplay");
 const timestampList = document.getElementById("timestampList");
+
+// Render timestamps on load
+renderTimestamps();
 
 // Add click handler
 saveButton.addEventListener("click", async () => {
@@ -30,16 +32,9 @@ saveButton.addEventListener("click", async () => {
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "timestampSaved") {
-    // Refresh the list if it's currently visible
-    if (timestampList.style.display !== "none") {
-      renderTimestamps(false);
-    }
+    // Refresh the list
+    renderTimestamps();
   }
-});
-
-// Add view button handler
-viewButton.addEventListener("click", () => {
-  renderTimestamps(true);
 });
 
 // Helper function to remove existing timestamp parameter from URL
@@ -79,8 +74,8 @@ function deleteTimestamp(timestampId) {
       } else {
         console.log("Timestamp deleted successfully");
         displayMessage("Timestamp deleted", "success");
-        // Refresh the display without toggling visibility
-        renderTimestamps(false);
+        // Refresh the display
+        renderTimestamps();
       }
     });
   });
@@ -88,9 +83,8 @@ function deleteTimestamp(timestampId) {
 
 /**
  * Renders the stored timestamps in the UI.
- * @param {boolean} toggleVisibility - If true, toggles the display of the list.
  */
-function renderTimestamps(toggleVisibility = false) {
+function renderTimestamps() {
   chrome.storage.local.get(["savedTimestamps"], (result) => {
     const timestamps = result.savedTimestamps || [];
 
@@ -139,12 +133,6 @@ function renderTimestamps(toggleVisibility = false) {
           chrome.tabs.create({ url: url });
         });
       });
-    }
-
-    if (toggleVisibility) {
-      timestampList.style.display =
-        timestampList.style.display === "none" ? "block" : "none";
-      timestampDisplay.textContent = ""; // Clear any current message
     }
   });
 }
