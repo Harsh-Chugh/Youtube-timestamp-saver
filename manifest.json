@@ -15,8 +15,8 @@
   "commands": {
     "save-timestamp": {
       "suggested_key": {
-        "default": "Alt+S",
-        "mac": "Alt+S"
+        "default": "Alt+X",
+        "mac": "Alt+X"
       },
       "description": "Save current YouTube timestamp"
     }
