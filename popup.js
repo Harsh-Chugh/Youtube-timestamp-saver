@@ -105,11 +105,10 @@ function renderTimestamps() {
           const timestampUrl = `${cleanUrl}${separator}t=${timeInSeconds}`;
 
           return `
-        <div class="timestamp-item">
+        <div class="timestamp-item" data-url="${timestampUrl}">
           <button class="delete-btn" data-id="${ts.id}" title="Delete timestamp">×</button>
-          <div class="timestamp-time">${ts.formattedTime} / ${ts.formattedDuration}</div>
           <div class="timestamp-title">${ts.title}</div>
-          <div class="timestamp-url"><a href="${timestampUrl}" class="timestamp-link">${ts.url}</a></div>
+          <div class="timestamp-time">${ts.formattedTime} / ${ts.formattedDuration}</div>
           <div class="timestamp-saved">Saved: ${new Date(ts.savedAt).toLocaleString()}</div>
         </div>
       `;
@@ -121,16 +120,20 @@ function renderTimestamps() {
       // Add event listeners for delete buttons
       const deleteButtons = timestampList.querySelectorAll(".delete-btn");
       deleteButtons.forEach((button) => {
-        button.addEventListener("click", handleDeleteClick);
+        button.addEventListener("click", (event) => {
+          event.stopPropagation(); // Prevent tile click from triggering
+          handleDeleteClick(event);
+        });
       });
 
-      // Add event listeners for timestamp links
-      const timestampLinks = timestampList.querySelectorAll(".timestamp-link");
-      timestampLinks.forEach((link) => {
-        link.addEventListener("click", (event) => {
-          event.preventDefault();
-          const url = event.currentTarget.href;
-          chrome.tabs.create({ url: url });
+      // Add event listeners for entire timestamp tiles
+      const items = timestampList.querySelectorAll(".timestamp-item");
+      items.forEach((item) => {
+        item.addEventListener("click", (event) => {
+          const url = item.dataset.url;
+          if (url) {
+            chrome.tabs.create({ url: url });
+          }
         });
       });
     }

@@ -149,6 +149,8 @@ h1 {
   margin-bottom: 12px;
   animation: fadeIn 0.3s ease;
   position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
 .timestamp-item:hover {
@@ -185,36 +187,23 @@ h1 {
 }
 
 .timestamp-time {
-  font-size: 18px;
-  font-weight: bold;
-  color: #f1f1f1;
-  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3ea6ff;
+  margin-bottom: 6px;
 }
 
 .timestamp-title {
-  font-size: 14px;
-  color: #aaaaaa;
+  font-size: 15px;
+  color: #f1f1f1;
   margin-bottom: 6px;
-  font-weight: 500;
-}
-
-.timestamp-url {
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-
-.timestamp-url a {
-  color: #3ea6ff;
-  text-decoration: none;
-   word-wrap: break-word;
-}
-
-.timestamp-url a:hover {
-  text-decoration: underline;
+  font-weight: 600;
+  padding-right: 20px;
 }
 
 .timestamp-saved {
   font-size: 11px;
   color: #717171;
   font-style: italic;
+  margin-bottom: 0;
 }
