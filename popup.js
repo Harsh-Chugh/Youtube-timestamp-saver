@@ -168,6 +168,5 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     saveButton.disabled = false;
   } else {
     saveButton.disabled = true;
-    displayMessage("Navigate to YouTube to use this extension", "info");
   }
 });
