@@ -274,3 +274,101 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     saveButton.disabled = true;
   }
 });
+
+// Export functionality
+exportCsvBtn.addEventListener("click", () => exportData("csv"));
+exportTxtBtn.addEventListener("click", () => exportData("txt"));
+
+function exportData(format) {
+  chrome.storage.local.get(["savedTimestamps"], (result) => {
+    const timestamps = result.savedTimestamps || [];
+    if (timestamps.length === 0) {
+      displayMessage("No data to export", "error");
+      return;
+    }
+
+    // Sort by savedAt descending
+    const sortedData = timestamps.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+
+    const headers = [
+      "S.No",
+      "Title",
+      "Video ID",
+      "URL",
+      "Timestamp (s)",
+      "Formatted Time",
+      "Duration (s)",
+      "Formatted Duration",
+      "Category",
+      "Saved At"
+    ];
+
+    let content = "";
+    const fileName = `youtube_timestamps_${new Date().toISOString().slice(0, 10)}`;
+
+    if (format === "csv") {
+      content = headers.map(h => `"${h}"`).join(",") + "\n";
+      content += sortedData.map((ts, index) => {
+        return [
+          index + 1,
+          ts.title || "",
+          ts.videoId || "",
+          ts.url || "",
+          ts.currentTime || 0,
+          ts.formattedTime || "",
+          ts.duration || 0,
+          ts.formattedDuration || "",
+          ts.category || "Default",
+          ts.savedAt || ""
+        ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(",");
+      }).join("\n");
+      downloadFile(content, `${fileName}.csv`, "text/csv");
+    } else {
+      content = headers.join("\t") + "\n";
+      content += sortedData.map((ts, index) => {
+        return [
+          index + 1,
+          ts.title || "",
+          ts.videoId || "",
+          ts.url || "",
+          ts.currentTime || 0,
+          ts.formattedTime || "",
+          ts.duration || 0,
+          ts.formattedDuration || "",
+          ts.category || "Default",
+          ts.savedAt || ""
+        ].join("\t");
+      }).join("\n");
+      downloadFile(content, `${fileName}.txt`, "text/plain");
+    }
+  });
+}
+
+function downloadFile(content, fileName, contentType) {
+  console.log("Preparing download for:", fileName);
+  const blob = new Blob([content], { type: contentType });
+  const reader = new FileReader();
+  
+  reader.onload = function() {
+    console.log("Data URL prepared, calling chrome.downloads.download");
+    chrome.downloads.download({
+      url: reader.result,
+      filename: fileName,
+      saveAs: true
+    }, (downloadId) => {
+      if (chrome.runtime.lastError) {
+        console.error("Download error:", chrome.runtime.lastError);
+        displayMessage("Export cancelled or failed", "error");
+      } else {
+        console.log("Download started with ID:", downloadId);
+        displayMessage(`Exporting ${fileName}...`, "success");
+      }
+    });
+  };
+  
+  reader.onerror = function(error) {
+    console.error("FileReader error:", error);
+  };
+  
+  reader.readAsDataURL(blob);
+}
